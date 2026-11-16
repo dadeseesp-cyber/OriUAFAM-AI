@@ -79,3 +79,7 @@ else:
 
     # Ejecutar la página seleccionada en la navegación
     navegacion.run()
+# Nota aclaratoria de tesis
+st.markdown("---")
+st.caption("🔒 Prototipo académico de tesis — Universidad UAFAM (Versión preliminar en evaluación).")
+
