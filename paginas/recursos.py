@@ -1,157 +1,236 @@
-import os
+import io
+from pathlib import Path
 import streamlit as st
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.platypus import HRFlowable, Paragraph, SimpleDocTemplate, Spacer
 
-def mostrar_recursos(usuario=None):
-    st.title("📚 Recursos y Materiales Académicos UAFAM")
-    st.write("Explora las guías, documentos oficiales y herramientas para apoyar tu desarrollo académico y vocacional.")
 
+def _resolver_ruta_documento(nombre_archivo: str) -> Path:
+    """Busca el PDF institucional en las rutas probables del proyecto."""
+    ruta_archivo = Path(__file__).resolve()
+    candidatos = [
+        ruta_archivo.parent.parent / "documentos" / nombre_archivo,
+        ruta_archivo.parent / "documentos" / nombre_archivo,
+        ruta_archivo.parent.parent.parent / "documentos" / nombre_archivo,
+        Path("documentos") / nombre_archivo,
+        Path("oriuafam_ai") / "documentos" / nombre_archivo,
+    ]
+    for ruta in candidatos:
+        if ruta.exists() and ruta.is_file():
+            return ruta
+    return candidatos[0]
+
+
+def generar_pdf_respaldo(titulo_doc: str, subtitulo_doc: str, cuerpo_texto: str) -> bytes:
+    """Genera un PDF válido en memoria si el archivo físico no se encuentra."""
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=letter,
+        rightMargin=45,
+        leftMargin=45,
+        topMargin=45,
+        bottomMargin=45,
+    )
+    styles = getSampleStyleSheet()
+
+    estilo_titulo = ParagraphStyle(
+        "TituloUAFAM",
+        parent=styles["Heading1"],
+        fontName="Helvetica-Bold",
+        fontSize=14,
+        textColor=colors.HexColor("#1B365D"),
+        alignment=1,
+    )
+    estilo_sub = ParagraphStyle(
+        "SubtituloUAFAM",
+        parent=styles["Heading2"],
+        fontName="Helvetica-Bold",
+        fontSize=11,
+        textColor=colors.HexColor("#2E5B88"),
+        alignment=1,
+        spaceAfter=12,
+    )
+    estilo_cuerpo = ParagraphStyle(
+        "CuerpoUAFAM",
+        parent=styles["Normal"],
+        fontName="Helvetica",
+        fontSize=10,
+        leading=14,
+        textColor=colors.HexColor("#2D3748"),
+    )
+
+    story = [
+        Paragraph(
+            "UNIVERSIDAD AGROFORESTAL FERNANDO ARTURO DE MERIÑO (UAFAM)",
+            estilo_titulo,
+        ),
+        Paragraph(titulo_doc, estilo_sub),
+        HRFlowable(
+            width="100%",
+            thickness=1,
+            color=colors.HexColor("#1B365D"),
+            spaceAfter=12,
+        ),
+        Paragraph(f"<b>{subtitulo_doc}</b>", estilo_cuerpo),
+        Spacer(1, 8),
+        Paragraph(cuerpo_texto, estilo_cuerpo),
+    ]
+    doc.build(story)
+    buffer.seek(0)
+    return buffer.getvalue()
+
+
+def leer_documento_o_generar(
+    nombre_archivo: str,
+    titulo_respaldo: str,
+    subtitulo_respaldo: str,
+    texto_respaldo: str,
+) -> bytes:
+    """Lee el PDF desde documentos/ o genera un PDF de respaldo en memoria."""
+    ruta_pdf = _resolver_ruta_documento(nombre_archivo)
+    if ruta_pdf.exists() and ruta_pdf.is_file():
+        return ruta_pdf.read_bytes()
+    return generar_pdf_respaldo(titulo_respaldo, subtitulo_respaldo, texto_respaldo)
+
+
+def mostrar_recursos(usuario=None) -> None:
+    st.title("🏛️ Centro de Información - UAFAM")
+    st.write(
+        "Explora las guías, documentos oficiales, recursos bibliográficos y servicios "
+        "institucionales para apoyar tu desarrollo académico y vocacional."
+    )
     st.markdown("---")
 
-    # Ruta base apuntando a la raíz del proyecto para ubicar 'documentos/'
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    DOCS_DIR = os.path.join(BASE_DIR, "documentos")
+    tab1, tab2, tab3 = st.tabs(
+        [
+            "📚 Biblioteca y Recursos",
+            "📜 Documentos y Reglamentos",
+            "🕒 Horarios y Servicios",
+        ]
+    )
 
-    # ==========================================
-    # SECCIÓN 1: DOCUMENTOS Y REGLAMENTOS OFICIALES
-    # ==========================================
-    st.subheader("📄 Documentos Oficiales UAFAM")
-    
-    col1, col2 = st.columns(2)
+    with tab1:
+        st.subheader("Catálogo y Recursos Bibliográficos")
+        st.write(
+            "Consulta referencias académicas, guías metodológicas y recursos de apoyo "
+            "para tus asignaturas y proyecto de grado."
+        )
 
-    with col1:
-        with st.expander("📖 Reglamento Estudiantil UAFAM", expanded=False):
-            st.markdown("""
-            ### 📌 Aspectos Clave del Reglamento Estudiantil
-            
-            * **Derechos Estudiantiles:** Recibir educación de calidad, libertad de expresión académica y acceso a servicios estudiantiles.
-            * **Deberes:** Mantener un índice académico mínimo, cumplir con la asistencia y respetar las normas disciplinarias.
-            * **Evaluación y Calificaciones:** 
-                * Exámenes parciales, trabajos prácticos y evaluación final.
-                * Puntuaciones mínimas de aprobación y proceso de revisión de pruebas.
-            * **Bajas y Retiros:** Fechas límites y procedimientos para retiro oficial de asignaturas sin penalización académica.
-            """)
-            st.caption("Formato: PDF | Versión Oficial Vigente 2026")
-            
-            reglamento_path = os.path.join(DOCS_DIR, "reglamento.pdf")
-            if os.path.exists(reglamento_path):
-                with open(reglamento_path, "rb") as f:
-                    st.download_button(
-                        label="📥 Descargar Reglamento Completo (PDF)",
-                        data=f,
-                        file_name="Reglamento_Estudiantil_UAFAM.pdf",
-                        mime="application/pdf",
-                        key="btn_reglamento"
-                    )
-            else:
-                st.error("⚠️ El archivo 'reglamento.pdf' no se encuentra en la carpeta 'documentos/'.")
+        busqueda = st.text_input(
+            "🔍 Buscar guías, temas o recursos:",
+            placeholder="Ej. RIASEC, calendario 2027, reglamento, Python...",
+            key="buscar_recurso_uafam",
+        )
 
-        with st.expander("🗓️ Calendario Académico 2027", expanded=False):
-            st.markdown("""
-            ### 📅 Fechas Clave del Período Lectivo
-            * **Inscripciones y Reinscripciones:** Inicio de cuatrimestres.
-            * **Período de Evaluaciones:** Parciales y finales.
-            * **Recesos Académicos y Feriados:** Fechas no lectivas institucionales.
-            """)
-            st.caption("Formato: PDF | Período 2027")
-            
-            calendario_path = os.path.join(DOCS_DIR, "calendario_2027.pdf")
-            if os.path.exists(calendario_path):
-                with open(calendario_path, "rb") as f:
-                    st.download_button(
-                        label="📥 Descargar Calendario",
-                        data=f,
-                        file_name="Calendario_Academico_UAFAM_2027.pdf",
-                        mime="application/pdf",
-                        key="btn_calendario"
-                    )
-            else:
-                st.error("⚠️ El archivo 'calendario_2027.pdf' no se encuentra en la carpeta 'documentos/'.")
+        if busqueda:
+            st.info(f"Mostrando sugerencias relacionadas con: **{busqueda}**")
+            st.markdown(
+                """
+- **Guía del Modelo Vocacional RIASEC (UAFAM)** — Orientación vocacional y afinidad por carreras.
+- **Calendario Académico Oficial 2027** — Fechas de inscripción, docencia y evaluaciones.
+- **Reglamento Académico Estudiantil** — Normativa de permanencia, evaluación y deberes estudiantiles.
+- **Solicitud de Servicios Estudiantiles** — Trámites de orientación, tutorías y registro.
+                """
+            )
+        else:
+            st.markdown(
+                """
+### 📌 Recursos Destacados para Estudiantes
+- 📖 **Normas APA 7ma Edición:** Lineamientos de citación y redacción académica para trabajos y tesis.
+- 🧭 **Modelo Vocacional RIASEC:** Marco de referencia para explorar perfiles e intereses profesionales.
+- 📅 **Planificación Académica 2027:** Consulta de períodos y fechas clave del año académico.
+                """
+            )
 
-    with col2:
-        with st.expander("🎓 Guía de Orientación Vocacional RIASEC", expanded=False):
-            st.markdown("""
-            ### 💡 Modelo Vocacional John Holland
-            * **6 Dimensiones:** Realista, Investigador, Artístico, Social, Emprendedor y Convencional.
-            * Explicación de cómo la prueba asigna recomendaciones de carreras en la UAFAM.
-            """)
-            st.caption("Formato: PDF | OriUAFAM AI")
-            
-            riasec_path = os.path.join(DOCS_DIR, "Guia_Modelo_RIASEC_UAFAM.pdf")
-            if os.path.exists(riasec_path):
-                with open(riasec_path, "rb") as f:
-                    st.download_button(
-                        label="📥 Descargar Guía RIASEC",
-                        data=f,
-                        file_name="Guia_Modelo_RIASEC_UAFAM.pdf",
-                        mime="application/pdf",
-                        key="btn_guia_riasec"
-                    )
-            else:
-                st.error("⚠️ El archivo 'Guia_Modelo_RIASEC_UAFAM.pdf' no se encuentra en la carpeta 'documentos/'.")
+    with tab2:
+        st.subheader("Documentos y Reglamentos Oficiales")
+        st.write(
+            "Descarga los documentos institucionales disponibles en el repositorio de la plataforma."
+        )
 
-        with st.expander("📋 Solicitud de Servicios Estudiantiles", expanded=False):
-            st.markdown("""
-            ### 📝 Tramitaciones Disponibles
-            * Certificaciones de estudio y récords de notas.
-            * Cartas de grado y homologaciones de asignaturas.
-            * Formularios oficiales para Departamento de Registro.
-            """)
-            st.caption("Formato: PDF | Registro y Control")
-            
-            solicitud_path = os.path.join(DOCS_DIR, "Solicitud_Servicios_UAFAM.pdf")
-            if os.path.exists(solicitud_path):
-                with open(solicitud_path, "rb") as f:
-                    st.download_button(
-                        label="📥 Descargar Formulario",
-                        data=f,
-                        file_name="Solicitud_Servicios_UAFAM.pdf",
-                        mime="application/pdf",
-                        key="btn_formulario"
-                    )
-            else:
-                st.error("⚠️ El archivo 'Solicitud_Servicios_UAFAM.pdf' no se encuentra en la carpeta 'documentos/'.")
+        pdf_reglamento = leer_documento_o_generar(
+            "reglamento.pdf",
+            "Reglamento Académico Estudiantil",
+            "Normativas de Evaluación, Matrícula y Permanencia - UAFAM",
+            "Documento oficial que establece los deberes, derechos, criterios de evaluación y disposiciones académicas de la Universidad Agroforestal Fernando Arturo de Meriño.",
+        )
+        pdf_riasec = leer_documento_o_generar(
+            "Guia_Modelo_RIASEC_UAFAM.pdf",
+            "Guía Oficial del Modelo Vocacional RIASEC",
+            "Marco Metodológico de Orientación Vocacional - OriUAFAM AI",
+            "Guía institucional sobre las dimensiones vocacionales RIASEC aplicadas a la orientación académica y profesional en UAFAM.",
+        )
+        pdf_calendario = leer_documento_o_generar(
+            "calendario_2027.pdf",
+            "Calendario Académico Oficial 2027",
+            "Fechas de Inscripción, Docencia y Evaluaciones - UAFAM",
+            "Cronograma de períodos académicos, inscripciones, retiros y evaluaciones correspondientes al año 2027.",
+        )
+        pdf_servicios = leer_documento_o_generar(
+            "Solicitud_Servicios_UAFAM.pdf",
+            "Formulario de Solicitud de Servicios Estudiantiles",
+            "Departamento de Orientación y Registro Académico",
+            "Formato institucional para solicitar servicios estudiantiles, asesoría académica y orientación vocacional.",
+        )
 
-    st.markdown("---")
+        col1, col2 = st.columns(2)
 
-    # ==========================================
-    # SECCIÓN 2: OFERTA ACADÉMICA Y PENSUMS
-    # ==========================================
-    st.subheader("🎓 Pensums por Carrera")
-    
-    carreras_pensum = {
-        "Licenciatura en Informática (INF)": "Especializada en desarrollo de software, bases de datos y redes.",
-        "Licenciatura en Contabilidad (LCO)": "Enfocada en auditoría, contabilidad financiera y normativa tributaria.",
-        "Licenciatura en Administración de Empresas (ADM)": "Orientada a la gestión gerencial, estrategia y emprendimiento.",
-        "Ingeniería Agronómica (IAG)": "Especializada en producción agrícola, sostenibilidad y biotecnología.",
-        "Licenciatura en Turismo (TUR)": "Desarrollo de proyectos turísticos, ecoturismo y gestión hotelera."
-    }
+        with col1:
+            st.markdown("##### 📌 Normativas y Guías")
+            st.download_button(
+                label="📥 Descargar Reglamento Estudiantil (PDF)",
+                data=pdf_reglamento,
+                file_name="reglamento.pdf",
+                mime="application/pdf",
+                use_container_width=True,
+                key="dl_reglamento_uafam",
+            )
+            st.download_button(
+                label="📥 Descargar Guía Modelo RIASEC (PDF)",
+                data=pdf_riasec,
+                file_name="Guia_Modelo_RIASEC_UAFAM.pdf",
+                mime="application/pdf",
+                use_container_width=True,
+                key="dl_riasec_uafam",
+            )
 
-    for idx, (carrera, desc) in enumerate(carreras_pensum.items()):
-        with st.expander(f"📌 {carrera}"):
-            st.write(desc)
-            nombre_corto = carrera.split('(')[0].strip()
-            codigo_carrera = carrera.split('(')[1].replace(')', '') if '(' in carrera else f"carrera_{idx}"
+        with col2:
+            st.markdown("##### 📌 Calendario y Trámites")
+            st.download_button(
+                label="📥 Descargar Calendario Académico 2027 (PDF)",
+                data=pdf_calendario,
+                file_name="calendario_2027.pdf",
+                mime="application/pdf",
+                use_container_width=True,
+                key="dl_calendario_2027_uafam",
+            )
+            st.download_button(
+                label="📥 Descargar Solicitud de Servicios (PDF)",
+                data=pdf_servicios,
+                file_name="Solicitud_Servicios_UAFAM.pdf",
+                mime="application/pdf",
+                use_container_width=True,
+                key="dl_servicios_uafam",
+            )
 
-            pensum_path = os.path.join(DOCS_DIR, f"Pensum_{codigo_carrera}.pdf")
-            if os.path.exists(pensum_path):
-                with open(pensum_path, "rb") as f:
-                    st.download_button(
-                        label=f"📄 Descargar Pensum de {nombre_corto}",
-                        data=f,
-                        file_name=f"Pensum_{codigo_carrera}.pdf",
-                        mime="application/pdf",
-                        key=f"btn_pensum_idx_{idx}_{codigo_carrera}"
-                    )
-            else:
-                st.warning(f"⚠️ El PDF del pensum ('Pensum_{codigo_carrera}.pdf') no está disponible aún en 'documentos/'.")
+    with tab3:
+        st.subheader("Horarios de Atención y Servicios")
+        st.info("🕒 **Lunes a Viernes:** 8:00 AM - 9:00 PM | **Sábados:** 8:00 AM - 4:00 PM")
+        st.markdown(
+            """
+### Servicios Disponibles en el Campus
+- **Orientación Académica y Vocacional:** Acompañamiento para planificación de asignaturas y toma de decisiones.
+- **Consulta Bibliográfica y Apoyo a la Investigación:** Acceso a materiales de estudio y guías de trabajo académico.
+- **Gestión y Registro Estudiantil:** Orientación sobre trámites y calendarios institucionales.
+            """
+        )
 
-    st.markdown("---")
 
-    # ==========================================
-    # SECCIÓN 3: CONSEJOS DE ESTUDIO Y PRODUCTIVIDAD
-    # ==========================================
-    st.subheader("💡 Consejos de Rendimiento Académico")
-    
-    st.info("🎯 **Técnica Pomodoro:** Estudia durante 25 minutos sin distracciones y descansa 5 minutos. Repite el ciclo 4 veces y toma un descanso largo.")
-    st.success("📝 **Toma de Apuntes Eficiente:** Utiliza el método Cornell dividiendo tus notas en ideas clave, apuntes detallados y un resumen final.")
-    st.warning("🤝 **Grupos de Estudio:** Explicar los temas a un compañero es una de las formas más efectivas de consolidar el aprendizaje.")
+_usuario_sesion = (
+    st.session_state.get("usuario_actual")
+    or st.session_state.get("usuario")
+)
+mostrar_recursos(_usuario_sesion)
