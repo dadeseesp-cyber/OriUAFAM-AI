@@ -1,0 +1,20 @@
+# Entorno virtual
+venv/
+env/
+.venv/
+
+# Cache de Python
+__pycache__/
+*.pyc
+
+# Base de datos local (cada quien genera la suya con inicializar_bd.py)
+datos/oriuafam.db
+
+# Variables de entorno (claves de API, etc. — nunca se suben a Git)
+.env
+
+# Configuración de VS Code (opcional, si no quieres compartirla)
+.vscode/
+
+# Archivos de sistema
+.DS_Store
