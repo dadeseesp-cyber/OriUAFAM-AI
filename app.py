@@ -21,7 +21,7 @@ else:
     p_pensum = st.Page("paginas/pensum_prerrequisitos.py", title="4. Pensum y Prerrequisitos", icon="📁")
     
     # Asistente oficial Ori
-    p_asistente = st.Page("paginas/asistente.py", title="Ori - Asistente IA", icon="🤖")
+    p_asistente = st.Page("paginas/asistente.py", title="5. Ori - Asistente IA", icon="🤖")
     
     p_historial = st.Page("paginas/historial.py", title="6. Ciclo de Vida e Historial", icon="📈")
     p_recursos = st.Page("paginas/recursos.py", title="7. Centro de Información", icon="🏛️")
