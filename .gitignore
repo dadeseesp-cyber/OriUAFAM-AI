@@ -18,3 +18,9 @@ datos/oriuafam.db
 
 # Archivos de sistema
 .DS_Store
+# Secretos de Streamlit (si llegas a usar secrets.toml)
+.streamlit/secrets.toml
+
+# Archivos temporales de Windows
+Thumbs.db
+desktop.ini
