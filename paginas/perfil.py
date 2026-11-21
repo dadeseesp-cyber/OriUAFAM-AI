@@ -12,9 +12,42 @@ from modelos.perfil_estudiante import (
     actualizar_perfil,
 )
 
+CLAVE_MENSAJE_PERFIL = "mensaje_perfil_exito"
+
+
+def _normalizar_carrera(carrera: str | None) -> str:
+    if not carrera:
+        return ""
+    texto = carrera.strip()
+    reemplazos = {
+        "Informatica": "Informática",
+        "informatica": "informática",
+    }
+    for incorrecto, correcto in reemplazos.items():
+        if correcto not in texto and incorrecto in texto:
+            texto = texto.replace(incorrecto, correcto)
+    return texto
+
+
+def _normalizar_etapa(etapa: str | None) -> str:
+    if not etapa:
+        return ETAPAS_CICLO_VIDA[0].capitalize()
+    limpia = etapa.strip()
+    for opcion in ETAPAS_CICLO_VIDA:
+        if opcion.lower() == limpia.lower():
+            return opcion.capitalize()
+    return limpia.capitalize()
+
+
+def _mostrar_mensaje_pendiente():
+    mensaje = st.session_state.pop(CLAVE_MENSAJE_PERFIL, None)
+    if mensaje:
+        st.success(mensaje)
+
 
 def mostrar_perfil(usuario: dict):
     st.header("Mi perfil estudiantil")
+    _mostrar_mensaje_pendiente()
 
     id_usuario = usuario["id_usuario"]
     perfil = obtener_perfil_por_usuario(id_usuario)
@@ -30,7 +63,10 @@ def _formulario_crear_perfil(id_usuario: int):
     with st.form("formulario_crear_perfil"):
         matricula = st.text_input("Matrícula")
         carrera = st.text_input("Carrera")
-        etapa = st.selectbox("Etapa de tu ciclo de vida estudiantil", ETAPAS_CICLO_VIDA)
+        etapa_mostrar = st.selectbox(
+            "Etapa de tu ciclo de vida estudiantil",
+            [_normalizar_etapa(op) for op in ETAPAS_CICLO_VIDA],
+        )
         intereses = st.text_area(
             "Intereses (separados por coma)",
             placeholder="Ej: inteligencia artificial, redes, bases de datos",
@@ -38,41 +74,50 @@ def _formulario_crear_perfil(id_usuario: int):
         guardar = st.form_submit_button("Guardar perfil")
 
     if guardar:
-        if not matricula or not carrera:
+        if not matricula.strip() or not carrera.strip():
             st.warning("Matrícula y carrera son obligatorias.")
         else:
-            crear_perfil(id_usuario, matricula, carrera, etapa, intereses)
-            st.success("Perfil creado correctamente.")
+            carrera_limpia = _normalizar_carrera(carrera)
+            etapa_guardar = etapa_mostrar.lower()
+            crear_perfil(
+                id_usuario, matricula.strip(), carrera_limpia, etapa_guardar, intereses
+            )
+            st.session_state[CLAVE_MENSAJE_PERFIL] = "Perfil creado correctamente."
             st.rerun()
 
 
 def _formulario_editar_perfil(perfil):
     st.write(f"**Matrícula:** {perfil['matricula']}")
 
+    opciones_etapa = [_normalizar_etapa(op) for op in ETAPAS_CICLO_VIDA]
+    carrera_mostrada = _normalizar_carrera(perfil["carrera"])
+    etapa_mostrada = _normalizar_etapa(perfil["etapa_ciclo_vida"])
+
     with st.form("formulario_editar_perfil"):
-        carrera = st.text_input("Carrera", value=perfil["carrera"] or "")
-        etapa_actual = perfil["etapa_ciclo_vida"] or ETAPAS_CICLO_VIDA[0]
+        carrera = st.text_input("Carrera", value=carrera_mostrada)
         indice_etapa = (
-            ETAPAS_CICLO_VIDA.index(etapa_actual)
-            if etapa_actual in ETAPAS_CICLO_VIDA
+            opciones_etapa.index(etapa_mostrada)
+            if etapa_mostrada in opciones_etapa
             else 0
         )
-        etapa = st.selectbox(
+        etapa_seleccionada = st.selectbox(
             "Etapa de tu ciclo de vida estudiantil",
-            ETAPAS_CICLO_VIDA,
+            opciones_etapa,
             index=indice_etapa,
         )
         intereses = st.text_area("Intereses", value=perfil["intereses"] or "")
         guardar = st.form_submit_button("Actualizar perfil")
 
     if guardar:
+        carrera_limpia = _normalizar_carrera(carrera)
+        etapa_guardar = etapa_seleccionada.lower()
         actualizar_perfil(
             perfil["id_usuario"],
-            carrera=carrera,
-            etapa_ciclo_vida=etapa,
+            carrera=carrera_limpia,
+            etapa_ciclo_vida=etapa_guardar,
             intereses=intereses,
         )
-        st.success("Perfil actualizado correctamente.")
+        st.session_state[CLAVE_MENSAJE_PERFIL] = "Perfil actualizado correctamente."
         st.rerun()
 
     st.caption(f"Última actualización: {perfil['fecha_actualizacion']}")
@@ -80,7 +125,7 @@ def _formulario_editar_perfil(perfil):
 
 # =========================================================================
 # Lógica de renderizado para app.py / st.navigation
-# =================================5========================================
+# =========================================================================
 if "usuario_actual" in st.session_state and st.session_state["usuario_actual"]:
     mostrar_perfil(st.session_state["usuario_actual"])
 elif "usuario" in st.session_state and st.session_state["usuario"]:
