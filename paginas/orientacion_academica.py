@@ -2,16 +2,66 @@ from datetime import date, timedelta
 import streamlit as st
 
 CALENDARIO_2027 = [
-    {"Periodo": "Cuatrimestre I - 2027", "Actividad": "Inscripción y selección de asignaturas", "Fecha / Ventana": "04 Ene - 12 Ene 2027", "Area": "Registro"},
-    {"Periodo": "Cuatrimestre I - 2027", "Actividad": "Inicio de docencia regular", "Fecha / Ventana": "15 Ene 2027", "Area": "Docencia"},
-    {"Periodo": "Cuatrimestre I - 2027", "Actividad": "Período de adición y retiro de materias", "Fecha / Ventana": "25 Ene - 03 Feb 2027", "Area": "Registro"},
-    {"Periodo": "Cuatrimestre I - 2027", "Actividad": "Evaluaciones finales y cierre", "Fecha / Ventana": "19 Abr - 24 Abr 2027", "Area": "Evaluación"},
-    {"Periodo": "Cuatrimestre II - 2027", "Actividad": "Inscripción y selección de asignaturas", "Fecha / Ventana": "03 May - 11 May 2027", "Area": "Registro"},
-    {"Periodo": "Cuatrimestre II - 2027", "Actividad": "Inicio de docencia regular", "Fecha / Ventana": "14 May 2027", "Area": "Docencia"},
-    {"Periodo": "Cuatrimestre II - 2027", "Actividad": "Evaluaciones finales y cierre", "Fecha / Ventana": "16 Ago - 21 Ago 2027", "Area": "Evaluación"},
-    {"Periodo": "Cuatrimestre III - 2027", "Actividad": "Inscripción y selección de asignaturas", "Fecha / Ventana": "30 Ago - 07 Sep 2027", "Area": "Registro"},
-    {"Periodo": "Cuatrimestre III - 2027", "Actividad": "Inicio de docencia regular", "Fecha / Ventana": "10 Sep 2027", "Area": "Docencia"},
-    {"Periodo": "Cuatrimestre III - 2027", "Actividad": "Evaluaciones finales y cierre del año", "Fecha / Ventana": "13 Dic - 18 Dic 2027", "Area": "Evaluación"},
+    {
+        "Periodo": "Cuatrimestre I - 2027",
+        "Actividad": "Inscripción y selección de asignaturas",
+        "Fecha / Ventana": "04 Ene - 12 Ene 2027",
+        "Area": "Registro",
+    },
+    {
+        "Periodo": "Cuatrimestre I - 2027",
+        "Actividad": "Inicio de docencia regular",
+        "Fecha / Ventana": "15 Ene 2027",
+        "Area": "Docencia",
+    },
+    {
+        "Periodo": "Cuatrimestre I - 2027",
+        "Actividad": "Período de adición y retiro de materias",
+        "Fecha / Ventana": "25 Ene - 03 Feb 2027",
+        "Area": "Registro",
+    },
+    {
+        "Periodo": "Cuatrimestre I - 2027",
+        "Actividad": "Evaluaciones finales y cierre",
+        "Fecha / Ventana": "19 Abr - 24 Abr 2027",
+        "Area": "Evaluación",
+    },
+    {
+        "Periodo": "Cuatrimestre II - 2027",
+        "Actividad": "Inscripción y selección de asignaturas",
+        "Fecha / Ventana": "03 May - 11 May 2027",
+        "Area": "Registro",
+    },
+    {
+        "Periodo": "Cuatrimestre II - 2027",
+        "Actividad": "Inicio de docencia regular",
+        "Fecha / Ventana": "14 May 2027",
+        "Area": "Docencia",
+    },
+    {
+        "Periodo": "Cuatrimestre II - 2027",
+        "Actividad": "Evaluaciones finales y cierre",
+        "Fecha / Ventana": "16 Ago - 21 Ago 2027",
+        "Area": "Evaluación",
+    },
+    {
+        "Periodo": "Cuatrimestre III - 2027",
+        "Actividad": "Inscripción y selección de asignaturas",
+        "Fecha / Ventana": "30 Ago - 07 Sep 2027",
+        "Area": "Registro",
+    },
+    {
+        "Periodo": "Cuatrimestre III - 2027",
+        "Actividad": "Inicio de docencia regular",
+        "Fecha / Ventana": "10 Sep 2027",
+        "Area": "Docencia",
+    },
+    {
+        "Periodo": "Cuatrimestre III - 2027",
+        "Actividad": "Evaluaciones finales y cierre del año",
+        "Fecha / Ventana": "13 Dic - 18 Dic 2027",
+        "Area": "Evaluación",
+    },
 ]
 
 
@@ -42,9 +92,14 @@ def mostrar_orientacion_academica(usuario=None):
 
     with tab1:
         st.subheader("Cronograma Institucional 2027")
+        orden_periodos = [
+            "Cuatrimestre I - 2027",
+            "Cuatrimestre II - 2027",
+            "Cuatrimestre III - 2027",
+        ]
         periodos = ["Todos los períodos"] + sorted(
-            {item["Periodo"] for item in CALENDARIO_2027},
-            key=lambda p: ["Cuatrimestre I - 2027", "Cuatrimestre II - 2027", "Cuatrimestre III - 2027"].index(p),
+            {item["Periodo"] for item in CALENDARIO_2027 if item["Periodo"] in orden_periodos},
+            key=lambda p: orden_periodos.index(p),
         )
         periodo_sel = st.selectbox("Filtrar por período académico:", periodos)
 
@@ -62,12 +117,14 @@ def mostrar_orientacion_academica(usuario=None):
         )
         st.markdown(
             """
-            * **Verifica prerrequisitos primero:** Confirma en *Gestión del Pensum y Prerrequisitos* que hayas completado las asignaturas base antes de inscribir materias avanzadas.
-            * **Equilibra tu carga de créditos:** Combina asignaturas de alta exigencia o laboratorio con materias teóricas o complementarias según tu disponibilidad de tiempo.
-            * **Respeta las ventanas del calendario:** Ten presentes las fechas de inscripción y retiro para evitar recargos o materias cursadas sin validez de avance.
+- **Verifica prerrequisitos primero:** Confirma en *Gestión del Pensum y Prerrequisitos* que hayas completado las asignaturas base antes de inscribir materias avanzadas.
+- **Equilibra tu carga de créditos:** Combina asignaturas de alta exigencia o laboratorio con materias teóricas o complementarias según tu disponibilidad de tiempo.
+- **Respeta las ventanas del calendario:** Ten presentes las fechas de inscripción y retiro para evitar recargos o materias cursadas sin validez de avance.
             """
         )
-        st.info("💡 Consejo: Si estás en etapas finales o preparando tu trabajo de grado, coordina con anticipación los requisitos de cierre de pensum.")
+        st.info(
+            "💡 Consejo: Si estás en etapas finales o preparando tu trabajo de grado, coordina con anticipación los requisitos de cierre de pensum."
+        )
 
     with tab3:
         st.subheader("Solicitar Asesoría o Cita Académica")
@@ -93,7 +150,14 @@ def mostrar_orientacion_academica(usuario=None):
                     value=date.today() + timedelta(days=2),
                     min_value=date.today(),
                 )
-                turno = st.selectbox("Turno preferido:", ["Mañana (8:30 AM - 12:00 PM)", "Tarde (2:00 PM - 5:30 PM)", "Noche (6:00 PM - 8:30 PM)"])
+                turno = st.selectbox(
+                    "Turno preferido:",
+                    [
+                        "Mañana (8:30 AM - 12:00 PM)",
+                        "Tarde (2:00 PM - 5:30 PM)",
+                        "Noche (6:00 PM - 8:30 PM)",
+                    ],
+                )
 
             comentario = st.text_area(
                 "Detalle o consulta breve (opcional):",
@@ -115,12 +179,13 @@ def mostrar_orientacion_academica(usuario=None):
 
         if st.session_state["citas_academicas_2027"]:
             st.markdown("##### Citas registradas en esta sesión")
-            st.dataframe(st.session_state["citas_academicas_2027"], use_container_width=True, hide_index=True)
+            st.dataframe(
+                st.session_state["citas_academicas_2027"],
+                use_container_width=True,
+                hide_index=True,
+            )
 
 
-# =========================================================================
-# Lógica de renderizado para app.py / st.navigation
-# =========================================================================
 if __name__ == "__main__":
     mostrar_orientacion_academica()
 else:

@@ -23,10 +23,10 @@ def mostrar_historial(usuario=None):
         st.subheader("Fases del Ciclo de Vida Estudiantil UAFAM")
         st.markdown("""
         El sistema monitorea y valida las siguientes etapas clave en el trayecto formativo del estudiante:
-        *   ✅ **Fase 1: Admisión y Registro de Perfil** — Validación de datos generales y expediente inicial.
-        *   ✅ **Fase 2: Orientación Vocacional (RIASEC)** — Aplicación del test y determinación de afinidad profesional.
-        *   🔄 **Fase 3: Planificación Académica por Cuatrimestres** — Selección de asignaturas y verificación de prerrequisitos.
-        *   ⏳ **Fase 4: Acompañamiento Continuo** — Asesoría mediante el asistente virtual y control de rendimiento.
+-   ✅ **Fase 1: Admisión y Registro de Perfil** — Validación de datos generales y expediente inicial.
+-   ✅ **Fase 2: Orientación Vocacional (RIASEC)** — Aplicación del test y determinación de afinidad profesional.
+-   🔄 **Fase 3: Planificación Académica por Cuatrimestres** — Selección de asignaturas y verificación de prerrequisitos.
+-   ⏳ **Fase 4: Acompañamiento Continuo** — Asesoría mediante el asistente virtual y control de rendimiento.
         """)
 
     with tab2:
@@ -80,7 +80,7 @@ Documento generado automáticamente por OriUAFAM AI.
 
         # Botón de descarga real integrado en Streamlit
         st.download_button(
-            label="📥 Descargar Reporte Oficial en PDF",
+            label="📥 Descargar Expediente Oficial (.TXT)",
             data=contenido_reporte.encode('utf-8'),
             file_name=f"Expediente_UAFAM_Estudiante_{usuario_id}.txt",
             mime="text/plain",

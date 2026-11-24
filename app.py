@@ -14,29 +14,42 @@ if "rol" not in st.session_state:
 if st.session_state["usuario"] is None:
     mostrar_login()
 else:
+    usuario_actual = st.session_state.get("usuario")
+    rol_raw = ""
+    if isinstance(usuario_actual, dict):
+        rol_raw = str(usuario_actual.get("rol") or "").strip().lower()
+    if not rol_raw and st.session_state.get("rol"):
+        rol_raw = str(st.session_state.get("rol") or "").strip().lower()
+
+    es_admin = rol_raw == "administrador"
+
     # --- DEFINICIÓN DE PÁGINAS Y MÓDULOS (CON NOMBRES EXACTOS DE TUS ARCHIVOS) ---
     p_perfil = st.Page("paginas/perfil.py", title="1. Mi Perfil y Expediente", icon="👤")
     p_riasec = st.Page("paginas/orientacion_vocacional.py", title="2. Orientación RIASEC", icon="🧭")
     p_academica = st.Page("paginas/orientacion_academica.py", title="3. Orientación Académica", icon="📚")
     p_pensum = st.Page("paginas/pensum_prerrequisitos.py", title="4. Pensum y Prerrequisitos", icon="📁")
-    
+
     # Asistente oficial Ori
     p_asistente = st.Page("paginas/asistente.py", title="5. Ori - Asistente IA", icon="🤖")
-    
+
     p_historial = st.Page("paginas/historial.py", title="6. Ciclo de Vida e Historial", icon="📈")
     p_recursos = st.Page("paginas/recursos.py", title="7. Centro de Información", icon="🏛️")
     p_admin = st.Page("paginas/administracion.py", title="⚙️ Administración", icon="🛠️")
 
     # --- NAVEGACIÓN AGRUPADA EN EL MENÚ LATERAL ---
-    navegacion = st.navigation({
+    menu_paginas = {
         "Identidad Estudiantil": [p_perfil],
         "Orientación": [p_riasec, p_academica],
         "Planificación Académica": [p_pensum],
         "Inteligencia Artificial": [p_asistente],
         "Seguimiento y Registro": [p_historial],
         "Recursos Institucionales": [p_recursos],
-        "Gestión del Sistema": [p_admin]
-    })
+    }
+
+    if es_admin:
+        menu_paginas["Gestión del Sistema"] = [p_admin]
+
+    navegacion = st.navigation(menu_paginas)
 
     # --- BARRA LATERAL ---
     with st.sidebar:
@@ -48,9 +61,8 @@ else:
         st.caption("Universidad Agroforestal Fernando Arturo de Meriño (UAFAM)")
 
     # --- BANNER SUPERIOR INSTITUCIONAL (UAFAM) ---
-    usuario_actual = st.session_state.get("usuario")
     nombre_usuario = usuario_actual.get("nombre", "Estudiante") if isinstance(usuario_actual, dict) else "Estudiante UAFAM"
-    rol_usuario = usuario_actual.get("rol", "estudiante").capitalize() if isinstance(usuario_actual, dict) else "Estudiante"
+    rol_usuario = (rol_raw.capitalize() if rol_raw else "Estudiante")
 
     st.markdown(
         f"""
